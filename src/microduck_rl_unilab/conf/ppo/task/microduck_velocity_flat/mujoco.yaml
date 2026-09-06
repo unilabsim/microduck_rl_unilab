@@ -22,3 +22,10 @@ algo:
   algorithm:
     learning_rate: 1.0e-3
     entropy_coef: 0.01
+    # Without this mapping, MuJoCo PPO can converge to seed-dependent
+    # one-sided turning. The 61D/14D function follows the actor contract.
+    symmetry_cfg:
+      use_data_augmentation: false
+      use_mirror_loss: true
+      mirror_loss_coeff: 0.5
+      data_augmentation_func: microduck_rl_unilab.tasks.microduck.symmetry.microduck_velocity_symmetry

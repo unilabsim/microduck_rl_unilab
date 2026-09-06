@@ -85,6 +85,12 @@ def test_microduck_owner_materializes_complete_manager_contract() -> None:
     assert cfg.algo.obs_groups.actor == ["policy"]
     assert cfg.algo.obs_groups.critic == ["critic"]
     assert cfg.algo.empirical_normalization is True
+    assert cfg.algo.algorithm.symmetry_cfg.use_mirror_loss is True
+    assert cfg.algo.algorithm.symmetry_cfg.mirror_loss_coeff == pytest.approx(0.5)
+    assert (
+        cfg.algo.algorithm.symmetry_cfg.data_augmentation_func
+        == "microduck_rl_unilab.tasks.microduck.symmetry.microduck_velocity_symmetry"
+    )
 
     assert env_cfg.sim_dt == pytest.approx(0.005)
     assert env_cfg.ctrl_dt == pytest.approx(0.02)
