@@ -28,6 +28,15 @@ registry.register_env(
     sim_backend="mjwarp",
 )
 
+# Forward-only max-speed policy. The Hydra owner specializes the velocity
+# contract; the generic runtime and cold-path asset factory remain shared.
+registry.register_env_config("MicroduckSprintFlat", ManagerBasedRlEnvCfg)
+registry.register_env(
+    "MicroduckSprintFlat",
+    make_microduck_velocity_env,
+    sim_backend="mujoco",
+)
+
 # VelStand (walking + fall recovery) on the ground-contact BAM model.
 registry.register_env_config("MicroduckVelstandFlat", ManagerBasedRlEnvCfg)
 registry.register_env(

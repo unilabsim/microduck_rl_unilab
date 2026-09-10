@@ -22,6 +22,8 @@ owner 配置和机器人 XML 资产。
 | task | ppo | sac |
 |------|-----|-----|
 | `microduck_velocity_flat` | mujoco, mjwarp | mujoco, mjwarp |
+| `microduck_sprint_flat` | mujoco | — |
+| `microduck_sprint_robust_flat` | mujoco | — |
 | `microduck_velstand_flat` | mujoco | — |
 | `microduck_standup_flat` | mujoco | — |
 | `microduck_ground_pick_flat` | mjwarp | — |
@@ -52,6 +54,7 @@ uv sync
 
 ```bash
 uv run microduck-train --algo ppo --task microduck_velocity_flat --sim mujoco
+uv run microduck-train --algo ppo --task microduck_sprint_flat --sim mujoco
 uv run microduck-train --algo ppo --task microduck_velocity_flat --sim mjwarp
 uv run microduck-train --algo ppo --task microduck_standup_flat --sim mujoco
 uv run microduck-train --algo sac --task microduck_velocity_flat --sim mujoco
@@ -72,6 +75,30 @@ uv run microduck-train --algo ppo --task microduck_velocity_flat --sim mujoco \
 ```bash
 uv run microduck-eval --algo ppo --task microduck_velocity_flat --sim mujoco --load-run -1
 ```
+
+Sprint 评估口径为 2.20 m/s 前向命令、1 秒预热、10 秒测量：
+
+```bash
+uv run --no-sync scripts/eval_sprint_speed.py \
+  examples/sprint_speed_1p68/model_11997.pt
+```
+
+从已训好的速度策略做三段 robustify（钉住 1.65–2.20 m/s 命令带，逐步加 push / CoM / 倾角）：
+
+```bash
+uv run --no-sync scripts/train_sprint_robust.py \
+  --load-run <sprint-run> --checkpoint <last-iter> --stages B
+```
+
+## 示例 checkpoint
+
+| 示例 | 速度 | 存活 | 头部倒置 | 说明 |
+|---|---|---|---|---|
+| [`examples/sprint_speed_1p68/`](examples/sprint_speed_1p68/) | 1.682 m/s | 89.8% | ~91% | 速度配方。大腿已左右交替；颈部折叠，头大部分时间倒置。 |
+| [`examples/sprint_head_upright/`](examples/sprint_head_upright/) | 1.315 m/s | 97.9% | 0.6% | 同一套交替步态上把头顶回朝天（本 PR 不含，见后续 PR）。 |
+
+每个目录含 `model_*.pt`、侧视 `play_video_side.gif`、`metrics.json` 和复现命令。
+`model.pt` 约 4.7 MB，直接入 git。
 
 ## 测试
 
@@ -101,13 +128,14 @@ src/microduck_rl_unilab/
 ├── cli.py                          # microduck-train / microduck-eval：env var + --config-dir 注入
 ├── conf_searchpath.py              # Hydra SearchPathPlugin（测试/脚本的程序化 compose 用）
 ├── conf/
-│   ├── ppo/task/microduck_{velocity_flat,velstand_flat,standup_flat,ground_pick_flat,sitstand_flat}/
+│   ├── ppo/task/microduck_{velocity_flat,sprint_flat,sprint_robust_flat,velstand_flat,standup_flat,ground_pick_flat,sitstand_flat}/
 │   └── sac/task/microduck_velocity_flat/
 └── tasks/
     ├── __init__.py                 # __unilab_registry_modules__
     └── microduck/
-        ├── __init__.py             # 5 个任务的 registry.register_env
+        ├── __init__.py             # 任务 registry.register_env
         ├── manager_terms.py        # velocity command / 奖励 terms
+        ├── sprint_terms.py         # sprint 速度/航向奖励与速度课程
         ├── recovery_terms.py       # velstand 跌倒恢复 terms
         ├── standup_terms.py        # standup / ground_pick / sitstand terms
         ├── bam_action.py           # BAM 电压驱动 action term
