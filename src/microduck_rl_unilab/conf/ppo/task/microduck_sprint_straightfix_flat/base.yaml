@@ -1,0 +1,78 @@
+# @package _global_
+# Long-horizon continuation after the explicit steering-recovery lesson.
+#
+# The actor now follows yaw-rate commands in both directions. Feed spawn
+# heading error through that existing 61D command observation, while
+# world-frame progress and cross-track costs recover straight-line speed.
+defaults:
+  - /task/microduck_sprint_rollfix_flat/base
+  - _self_
+
+env:
+  max_episode_seconds: 30.0
+  commands:
+    twist:
+      resampling_time_range: [30.0, 30.0]
+      rel_standing_envs: 0.0
+      # Feed a proportional spawn-heading correction through the existing
+      # yaw-rate command observation. This closes the loop without changing
+      # the 61D actor input or invalidating the resumed checkpoint.
+      hold_spawn_heading: true
+      spawn_heading_stiffness: 2.5
+      spawn_cross_track_stiffness: 0.08
+      spawn_heading_yaw_rate_limit: 0.35
+      ranges:
+        lin_vel_x: [1.65, 2.20]
+        lin_vel_y: [0.0, 0.0]
+        ang_vel_z: [0.0, 0.0]
+  events:
+    # First establish causality without random pushes adding lateral motion.
+    # Robustness can be restored after a straight gait passes the 20 s gate.
+    push_robot: null
+  curriculum:
+    head_roll_band_weight: null
+    heading_abs_weight: null
+    straightness_weight: null
+    cross_track_weight: null
+
+reward:
+  forward_progress:
+    weight: 5.0
+  spawn_progress:
+    weight: 3.0
+  heading_abs:
+    weight: -0.25
+  heading_hold:
+    weight: 2.0
+    params:
+      std: 0.4
+      asset_cfg:
+        _target_: unilab.managers.SceneEntityCfg
+        name: robot
+  tracking_ang_vel:
+    weight: 12.0
+    params: {std: 0.7071067811865476, command_name: twist}
+  planar_drift:
+    weight: -0.20
+  straightness:
+    func: microduck_rl_unilab.tasks.microduck.sprint_terms.running_straightness_cost
+    weight: -0.30
+    params:
+      command_name: twist
+      lateral_scale: 0.20
+      yaw_rate_scale: 0.20
+      asset_cfg:
+        _target_: unilab.managers.SceneEntityCfg
+        name: robot
+  cross_track:
+    func: microduck_rl_unilab.tasks.microduck.sprint_terms.cross_track_abs_cost
+    weight: -0.40
+    params:
+      distance_cap: 0.40
+      asset_cfg:
+        _target_: unilab.managers.SceneEntityCfg
+        name: robot
+  # Keep the roll fix at its converged value; its curriculum restarts on a
+  # resumed run and would otherwise reopen the joint-stop loophole.
+  head_roll_band:
+    weight: -4.0

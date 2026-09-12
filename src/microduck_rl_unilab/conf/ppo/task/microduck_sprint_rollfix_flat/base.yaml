@@ -1,0 +1,49 @@
+# @package _global_
+# Single-variable follow-up to the head repair owner: close the head_roll stop.
+#
+# The repaired gait holds its head upright and forward -- measured head yaw is
+# about 1 deg -- but it still curves to one side at roughly 3 deg per second,
+# and 62-67% of episodes veer the same way. Across every checkpoint
+# ``head_roll`` sits at +25.4 deg, hard against a stop whose travel is a
+# symmetric +-25 deg and whose home is zero, so the tilt is a deliberate
+# balance pivot rather than a model asymmetry.
+#
+# Only ``head_roll_band`` ramps here. The pitch, upright, and facing weights
+# are pinned at the values the repair run ended on, because their ramps in the
+# gaitfix owner restart at stage zero on a new run and would hand back the
+# upright head this owner depends on. Keeping one moving part means a heading
+# change can be attributed to the roll.
+defaults:
+  - /task/microduck_sprint_gaitfix_flat/base
+  - _self_
+
+env:
+  curriculum:
+    head_upright_weight: null
+    head_pitch_band_weight: null
+    head_facing_abs_weight: null
+    head_pose_tracking_weight: null
+    head_roll_band_weight:
+      func: unilab.envs.mdp.reward_curriculum
+      params:
+        reward_name: head_roll_band
+        stages:
+          # Stage zero is deliberately soft: the resumed policy starts parked
+          # at the stop, so the full cost would arrive as a step change.
+          - {step: 0, weight: -0.5}
+          - {step: 12000, weight: -1.5}
+          - {step: 24000, weight: -3.0}
+          - {step: 36000, weight: -4.0}
+
+reward:
+  # End-of-repair head weights, held constant.
+  head_upright:
+    weight: 3.0
+  head_pitch_band:
+    weight: -1.5
+  head_facing_abs:
+    weight: -2.0
+  head_pose_tracking:
+    weight: 3.5
+  head_roll_band:
+    weight: -0.5

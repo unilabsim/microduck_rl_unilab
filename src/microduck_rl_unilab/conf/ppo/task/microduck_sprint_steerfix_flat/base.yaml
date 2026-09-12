@@ -1,0 +1,55 @@
+# @package _global_
+# Restore yaw-rate controllability before closing the spawn-heading loop.
+#
+# Fast forward-only training narrowed yaw commands to almost zero and the
+# resumed actor no longer responds directionally to a yaw command.  This owner
+# removes world-heading objectives temporarily and teaches the existing 61D
+# policy input to command deliberate left/right turns without sacrificing the
+# converged upright head or alternating sprint.
+defaults:
+  - /task/microduck_sprint_rollfix_flat/base
+  - _self_
+
+env:
+  max_episode_seconds: 12.0
+  commands:
+    twist:
+      resampling_time_range: [4.0, 8.0]
+      rel_standing_envs: 0.0
+      rel_forward_envs: 0.15
+      turn_in_place_fraction: 0.0
+      hold_spawn_heading: false
+      ranges:
+        lin_vel_x: [1.65, 2.20]
+        lin_vel_y: [0.0, 0.0]
+        ang_vel_z: [-0.35, 0.35]
+  events:
+    push_robot: null
+  curriculum:
+    head_upright_weight: null
+    head_pitch_band_weight: null
+    head_facing_abs_weight: null
+    head_pose_tracking_weight: null
+    head_roll_band_weight: null
+
+reward:
+  # A turning lesson must not simultaneously punish departure from the spawn
+  # ray. These objectives return in the closed-loop continuation.
+  spawn_progress: null
+  heading_abs: null
+  heading_hold: null
+  tracking_ang_vel:
+    weight: 12.0
+    params: {std: 0.7071067811865476, command_name: twist}
+  planar_drift:
+    weight: -0.20
+  head_upright:
+    weight: 3.0
+  head_pitch_band:
+    weight: -1.5
+  head_facing_abs:
+    weight: -2.0
+  head_pose_tracking:
+    weight: 3.5
+  head_roll_band:
+    weight: -4.0

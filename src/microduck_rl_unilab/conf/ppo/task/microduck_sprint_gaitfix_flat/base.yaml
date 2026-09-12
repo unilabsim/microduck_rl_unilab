@@ -1,0 +1,180 @@
+# @package _global_
+# Head-repair continuation on top of the published 1.68 m/s robustify owner.
+#
+# Speed discovery stays on ``microduck_sprint_flat`` so this owner does not
+# rewrite the 1.68 m/s recipe. All extra terms are declared here (the parent
+# owner does not know about them). Head weights ramp in; leg-alternation
+# guards are on from the first resume step.
+defaults:
+  - /task/microduck_sprint_robust_flat/base
+  - _self_
+
+env:
+  commands:
+    head_pose:
+      resampling_time_range: [12.0, 12.0]
+      ranges:
+        - [0.0, 0.0]
+        - [0.0, 0.0]
+        - [0.0, 0.0]
+        - [0.0, 0.0]
+  curriculum:
+    head_upright_weight:
+      func: unilab.envs.mdp.reward_curriculum
+      params:
+        reward_name: head_upright
+        stages:
+          - {step: 0, weight: 0.5}
+          - {step: 24000, weight: 1.5}
+          - {step: 48000, weight: 2.5}
+          - {step: 72000, weight: 3.0}
+    head_pitch_band_weight:
+      func: unilab.envs.mdp.reward_curriculum
+      params:
+        reward_name: head_pitch_band
+        stages:
+          - {step: 0, weight: -0.1}
+          - {step: 24000, weight: -0.4}
+          - {step: 48000, weight: -1.0}
+          - {step: 72000, weight: -1.5}
+    head_facing_abs_weight:
+      func: unilab.envs.mdp.reward_curriculum
+      params:
+        reward_name: head_facing_abs
+        stages:
+          - {step: 0, weight: -0.2}
+          - {step: 24000, weight: -0.7}
+          - {step: 48000, weight: -1.4}
+          - {step: 72000, weight: -2.0}
+    head_pose_tracking_weight:
+      func: unilab.envs.mdp.reward_curriculum
+      params:
+        reward_name: head_pose_tracking
+        stages:
+          - {step: 0, weight: 1.0}
+          - {step: 24000, weight: 2.0}
+          - {step: 48000, weight: 3.0}
+          - {step: 72000, weight: 3.5}
+
+reward:
+  spawn_progress:
+    func: microduck_rl_unilab.tasks.microduck.sprint_terms.running_spawn_progress
+    weight: 1.5
+    params:
+      speed_cap: 2.4
+      asset_cfg:
+        _target_: unilab.managers.SceneEntityCfg
+        name: robot
+  heading_abs:
+    func: microduck_rl_unilab.tasks.microduck.sprint_terms.heading_abs_cost
+    weight: -0.25
+    params:
+      asset_cfg:
+        _target_: unilab.managers.SceneEntityCfg
+        name: robot
+  leg_alternation:
+    func: microduck_rl_unilab.tasks.microduck.sprint_terms.running_leg_alternation
+    weight: 2.5
+    params:
+      command_name: twist
+      command_threshold: 0.01
+      swing_cap_deg: 50.0
+      tau_s: 0.5
+      asset_cfg:
+        _target_: unilab.managers.SceneEntityCfg
+        name: robot
+        joint_names: [left_hip_pitch, right_hip_pitch]
+        preserve_order: true
+  stride_length:
+    func: microduck_rl_unilab.tasks.microduck.sprint_terms.running_stride_length
+    weight: 1.5
+    params:
+      command_name: twist
+      command_threshold: 0.01
+      stride_cap: 0.10
+      tau_s: 0.5
+      asset_cfg:
+        _target_: unilab.managers.SceneEntityCfg
+        name: robot
+        body_names: [ankle_left, ankle_right]
+        preserve_order: true
+  alternate_steps:
+    func: microduck_rl_unilab.tasks.microduck.sprint_terms.running_alternate_steps
+    weight: 1.0
+    params:
+      command_name: twist
+      command_threshold: 0.01
+      flight_value: 0.6
+  contact_symmetry:
+    func: microduck_rl_unilab.tasks.microduck.sprint_terms.running_contact_symmetry_cost
+    weight: -1.0
+    params:
+      command_name: twist
+      command_threshold: 0.01
+      tau_s: 0.4
+  head_upright:
+    func: microduck_rl_unilab.tasks.microduck.sprint_terms.head_upright_hold
+    weight: 0.5
+    params:
+      free_tilt_deg: 45.0
+      zero_tilt_deg: 120.0
+      asset_cfg:
+        _target_: unilab.managers.SceneEntityCfg
+        name: robot
+        body_names: [jaw_soft]
+        preserve_order: true
+  head_pitch_band:
+    func: microduck_rl_unilab.tasks.microduck.sprint_terms.joint_band_cost
+    weight: -0.1
+    params:
+      band_deg: [[-50.0, 45.0], [-50.0, 50.0]]
+      asset_cfg:
+        _target_: unilab.managers.SceneEntityCfg
+        name: robot
+        joint_names: [neck_pitch, head_pitch]
+        preserve_order: true
+  head_facing_abs:
+    func: microduck_rl_unilab.tasks.microduck.sprint_terms.head_facing_abs_cost
+    weight: -0.2
+    params:
+      asset_cfg:
+        _target_: unilab.managers.SceneEntityCfg
+        name: robot
+        joint_names: [head_yaw, head_roll]
+        preserve_order: true
+  head_roll_band:
+    func: microduck_rl_unilab.tasks.microduck.sprint_terms.joint_band_cost
+    weight: -0.5
+    params:
+      band_deg: [[-10.0, 10.0]]
+      asset_cfg:
+        _target_: unilab.managers.SceneEntityCfg
+        name: robot
+        joint_names: [head_roll]
+        preserve_order: true
+  head_pose_tracking:
+    func: microduck_rl_unilab.tasks.microduck.sprint_terms.head_facing_hold
+    weight: 1.0
+    params:
+      command_name: head_pose
+      std: null
+      yaw_std: 0.15
+      roll_std: 0.12
+      pitch_tuck_std: 0.25
+      extra_slack: 0.45
+      extra_std: 0.35
+      forward_pitch_sign: -1.0
+      asset_cfg:
+        _target_: unilab.managers.SceneEntityCfg
+        name: robot
+        joint_names: [neck_pitch, head_pitch, head_yaw, head_roll]
+        preserve_order: true
+  head_joint_vel:
+    func: unilab.envs.mdp.joint_vel_l2
+    weight: -0.02
+    params:
+      asset_cfg:
+        _target_: unilab.managers.SceneEntityCfg
+        name: robot
+        joint_names: [head_yaw, head_roll]
+        preserve_order: true

@@ -1,0 +1,80 @@
+{
+  "label": "sprint_straight_long",
+  "task": "MicroduckSprintFlat",
+  "train_owner": "microduck_sprint_steerfix_flat then microduck_sprint_straightfix_flat",
+  "resume_from": "examples/sprint_head_upright/model_14500.pt",
+  "checkpoint": "examples/sprint_straight_long/model_19297.pt",
+  "source_run": "2026-09-11_23-09-51_mujoco",
+  "source_iteration": 19297,
+  "closed_loop": {
+    "hold_spawn_heading": true,
+    "spawn_heading_stiffness": 2.5,
+    "spawn_cross_track_stiffness": 0.08,
+    "spawn_heading_yaw_rate_limit": 0.35
+  },
+  "long_horizon": {
+    "backend": "mujoco",
+    "command_forward_m_s": 2.2,
+    "fall_tilt_deg": 70.0,
+    "seed_123_120s": {
+      "num_envs": 128,
+      "survival_fraction": 1.0,
+      "mean_absolute_heading_error_deg": 1.76,
+      "straight_pose_horizon_s": {"mean": 120.0, "p10": 120.0},
+      "straight_pose_survival_fraction": 0.992,
+      "spawn_forward_displacement_m": 100.6,
+      "head_up_tilt_deg": 28.8,
+      "head_inverted_time_fraction": 0.0
+    },
+    "seed_123_300s": {
+      "num_envs": 128,
+      "survival_fraction": 1.0,
+      "mean_absolute_heading_error_deg": 1.71,
+      "straight_pose_horizon_s": {"mean": 294.9, "p10": 294.9},
+      "straight_pose_survival_fraction": 0.953,
+      "spawn_forward_displacement_m": 247.9,
+      "head_up_tilt_deg": 28.8,
+      "head_inverted_time_fraction": 0.0
+    },
+    "seed_456_300s": {
+      "num_envs": 128,
+      "survival_fraction": 1.0,
+      "mean_absolute_heading_error_deg": 1.74,
+      "straight_pose_horizon_s": {"mean": 291.5, "p10": 291.5},
+      "straight_pose_survival_fraction": 0.938,
+      "spawn_forward_displacement_m": 247.4,
+      "head_up_tilt_deg": 28.5,
+      "head_inverted_time_fraction": 0.0
+    },
+    "seed_123_600s": {
+      "num_envs": 128,
+      "survival_fraction": 0.953,
+      "mean_absolute_heading_error_deg": 3.05,
+      "straight_pose_horizon_s": {"mean": 561.0, "p10": 561.0},
+      "straight_pose_survival_fraction": 0.875,
+      "spawn_forward_displacement_m": 480.0,
+      "head_up_tilt_deg": 28.6,
+      "head_inverted_time_fraction": 0.0
+    },
+    "seed_456_600s": {
+      "num_envs": 128,
+      "survival_fraction": 1.0,
+      "mean_absolute_heading_error_deg": 2.77,
+      "straight_pose_horizon_s": {"mean": 543.4, "p10": 543.4},
+      "straight_pose_survival_fraction": 0.797,
+      "spawn_forward_displacement_m": 501.3,
+      "head_up_tilt_deg": 28.9,
+      "head_inverted_time_fraction": 0.0
+    }
+  },
+  "gait": {
+    "hip_split_sign_flip_fraction": 0.48,
+    "foot_gap_sign_flip_fraction": 0.487,
+    "trunk_height_m": 0.116,
+    "head_yaw_deg": -0.27,
+    "head_roll_deg": -0.30
+  },
+  "known_limits": {
+    "note": "Posture and spawn-ray holding outrank top speed. Mean long-horizon speed is about 0.83 m/s. A faster 1.33 m/s continuation exists but drops the 300 s straight-pose pass to 57.8%."
+  }
+}

@@ -1,0 +1,23 @@
+# @package _global_
+defaults:
+  - /task/microduck_sprint_robust_flat/base
+  - _self_
+
+training:
+  task_name: MicroduckSprintFlat
+  sim_backend: mujoco
+  play_steps: 500
+
+algo:
+  num_envs: 2048
+  max_iterations: 100
+  save_interval: 50
+  empirical_normalization: true
+  obs_groups:
+    actor: [policy]
+    critic: [critic]
+  policy:
+    init_noise_std: 1.0
+  algorithm:
+    learning_rate: 1.0e-3
+    entropy_coef: 0.02

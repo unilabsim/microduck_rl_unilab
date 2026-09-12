@@ -110,6 +110,10 @@ class MicroduckVelocityCommandCfg(UniformVelocityCommandCfg):
 
     turn_in_place_fraction: float = 0.0
     turn_in_place_ang_min: float = 0.4
+    hold_spawn_heading: bool = False
+    spawn_heading_stiffness: float = 1.5
+    spawn_cross_track_stiffness: float = 0.0
+    spawn_heading_yaw_rate_limit: float = 0.5
 
     def build(self, env: ManagerBasedRlEnv) -> MicroduckVelocityCommand:
         return MicroduckVelocityCommand(self, env)
@@ -126,10 +130,44 @@ class MicroduckVelocityCommand(UniformVelocityCommand):
             label="MicroduckVelocityCommand turn_in_place_ang_min",
         )
         self._turn_ang_max = max(abs(value) for value in cfg.ranges.ang_vel_z)
+        if not isinstance(cfg.hold_spawn_heading, bool):
+            raise TypeError(
+                "MicroduckVelocityCommand hold_spawn_heading must be bool"
+            )
+        self._hold_spawn_heading = cfg.hold_spawn_heading
+        self._spawn_heading_stiffness = _finite_real(
+            cfg.spawn_heading_stiffness,
+            label="MicroduckVelocityCommand spawn_heading_stiffness",
+            minimum=0.0,
+        )
+        self._spawn_cross_track_stiffness = _finite_real(
+            cfg.spawn_cross_track_stiffness,
+            label="MicroduckVelocityCommand spawn_cross_track_stiffness",
+            minimum=0.0,
+        )
+        self._spawn_heading_yaw_rate_limit = _finite_real(
+            cfg.spawn_heading_yaw_rate_limit,
+            label="MicroduckVelocityCommand spawn_heading_yaw_rate_limit",
+            minimum=0.0,
+            strict_minimum=True,
+        )
         super().__init__(cfg, env)
+        self._spawn_heading = np.asarray(
+            self.robot.data.heading_w, dtype=get_global_dtype()
+        ).copy()
+        self._spawn_position_xy = np.asarray(
+            self.robot.data.root_link_pos_w[:, :2], dtype=get_global_dtype()
+        ).copy()
+        # Reset events stage root-state writes inside a transaction. Command
+        # reset runs before that transaction commits, so reading heading in
+        # _resample_command would capture the pre-reset yaw. Defer the read to
+        # _update_command, which the environment invokes after commit.
+        self._capture_spawn_heading = np.zeros(self.num_envs, dtype=np.bool_)
 
     def _resample_command(self, env_ids: np.ndarray) -> None:
         super()._resample_command(env_ids)
+        if self._hold_spawn_heading:
+            self._capture_spawn_heading[env_ids] = True
         if self._turn_fraction == 0.0 or len(env_ids) == 0:
             return
         selected = self._env.rng.uniform(0.0, 1.0, len(env_ids)) < self._turn_fraction
@@ -149,6 +187,41 @@ class MicroduckVelocityCommand(UniformVelocityCommand):
         # the world-frame copy, matching upstream VelocityCommandCommandOnly.
         self.is_standing_env[turn_ids] = False
         self.vel_command_w[turn_ids] = self.vel_command_b[turn_ids]
+
+    def _update_command(self, env_ids: np.ndarray | None = None) -> None:
+        super()._update_command(env_ids)
+        if not self._hold_spawn_heading:
+            return
+        ids = slice(None) if env_ids is None else env_ids
+        pending = self._capture_spawn_heading[ids]
+        if np.any(pending):
+            capture_ids = (
+                np.flatnonzero(self._capture_spawn_heading)
+                if env_ids is None
+                else env_ids[pending]
+            )
+            self._spawn_heading[capture_ids] = self.robot.data.heading_w[capture_ids]
+            self._spawn_position_xy[capture_ids] = self.robot.data.root_link_pos_w[
+                capture_ids, :2
+            ]
+            self._capture_spawn_heading[capture_ids] = False
+        heading_error = np_wrap_to_pi(
+            self._spawn_heading[ids] - self.robot.data.heading_w[ids]
+        )
+        spawn_heading = self._spawn_heading[ids]
+        displacement = (
+            self.robot.data.root_link_pos_w[ids, :2] - self._spawn_position_xy[ids]
+        )
+        lateral_axis = np.stack(
+            [-np.sin(spawn_heading), np.cos(spawn_heading)], axis=1
+        )
+        cross_track_error = np.sum(displacement * lateral_axis, axis=1)
+        self.vel_command_b[ids, 2] = np.clip(
+            self._spawn_heading_stiffness * heading_error
+            - self._spawn_cross_track_stiffness * cross_track_error,
+            -self._spawn_heading_yaw_rate_limit,
+            self._spawn_heading_yaw_rate_limit,
+        )
 
 
 class GroundPickPhaseCommand(UniformVelocityCommand):
