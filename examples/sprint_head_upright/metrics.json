@@ -1,0 +1,38 @@
+{
+  "label": "sprint_head_upright",
+  "task": "MicroduckSprintFlat",
+  "train_owner": "microduck_sprint_gaitfix_flat then microduck_sprint_rollfix_flat",
+  "resume_from": "examples/sprint_speed_1p68/model_11997.pt",
+  "checkpoint": "examples/sprint_head_upright/model_14500.pt",
+  "source_run": "2026-09-10_20-10-07_mujoco",
+  "source_iteration": 14500,
+  "battery": {
+    "backend": "mujoco",
+    "seed": 123,
+    "num_envs": 512,
+    "command_forward_m_s": 2.2,
+    "warmup_s": 1.0,
+    "duration_s": 10.0,
+    "fall_tilt_deg": 70.0,
+    "survival_fraction": 0.978515625,
+    "body_forward_speed_m_s": {
+      "mean": 1.3147631727751985
+    },
+    "mean_absolute_heading_error_deg": 42.42728801503908,
+    "head_inverted_time_fraction": 0.0055936317309876245,
+    "head_up_tilt_deg": 38.495045704117324,
+    "head_yaw_abs_deg": 1.9326786229101705,
+    "head_roll_abs_deg": 1.399350568682696
+  },
+  "gait": {
+    "hip_split_sign_flip_fraction": 0.482,
+    "hip_split_peak_to_peak_deg": 152.9,
+    "foot_gap_peak_to_peak_m": 0.228,
+    "trunk_height_m": 0.131
+  },
+  "known_limits": {
+    "heading_error_deg": 42.4,
+    "heading_left_fraction": 0.67,
+    "note": "Head is upright and roll is off the 25 deg stop. The run still curves left at about 3 deg/s; head_roll was not the only cause."
+  }
+}

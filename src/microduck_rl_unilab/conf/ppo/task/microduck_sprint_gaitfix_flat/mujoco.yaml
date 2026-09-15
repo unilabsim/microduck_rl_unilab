@@ -1,0 +1,25 @@
+# @package _global_
+defaults:
+  - /task/microduck_sprint_gaitfix_flat/base
+  - _self_
+
+training:
+  task_name: MicroduckSprintFlat
+  sim_backend: mujoco
+  play_steps: 500
+
+algo:
+  num_envs: 2048
+  max_iterations: 100
+  save_interval: 50
+  empirical_normalization: true
+  obs_groups:
+    actor: [policy]
+    critic: [critic]
+  policy:
+    init_noise_std: 1.0
+  algorithm:
+    # Resume rate: the published gait is the starting point, so the head
+    # repair should nudge it rather than re-solve locomotion.
+    learning_rate: 2.0e-4
+    entropy_coef: 0.01

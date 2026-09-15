@@ -1,0 +1,122 @@
+# @package _global_
+# Forward-only max-speed recipe derived from Vottivott/microduck-playground's
+# Mjlab-Running-Flat-MicroDuck. The velocity task remains the contract owner
+# for the 61D actor observation, 76D critic observation, 14D action, BAM
+# actuator, sensor delays, fixed reset DR, and flat-ground assets.
+defaults:
+  - /task/microduck_velocity_flat/base
+  - _self_
+
+env:
+  max_episode_seconds: 12.0
+  commands:
+    twist:
+      resampling_time_range: [12.0, 12.0]
+      rel_standing_envs: 0.03
+      rel_heading_envs: 0.0
+      rel_world_envs: 0.0
+      turn_in_place_fraction: 0.0
+      ranges:
+        lin_vel_x: [0.2, 0.45]
+        lin_vel_y: [-0.02, 0.02]
+        ang_vel_z: [-0.05, 0.05]
+  events:
+    # Speed discovery keeps fixed reset-time DR but removes interval pushes.
+    push_robot: null
+  curriculum:
+    # Walking precision/DR curricula do not run during speed discovery.
+    head_pose_bias_weight: null
+    standing_envs: null
+    head_pose_range: null
+    base_com_range: null
+    head_com_range: null
+    running_speed_range:
+      func: microduck_rl_unilab.tasks.microduck.sprint_terms.running_command_ranges_curriculum
+      params:
+        command_name: twist
+        speed_stages:
+          - {step: 0, min_speed: 0.20, max_speed: 0.45}
+          - {step: 24000, min_speed: 0.30, max_speed: 0.55}
+          - {step: 48000, min_speed: 0.40, max_speed: 0.65}
+          - {step: 72000, min_speed: 0.50, max_speed: 0.75}
+          - {step: 96000, min_speed: 0.60, max_speed: 0.85}
+          - {step: 120000, min_speed: 0.70, max_speed: 0.95}
+          - {step: 144000, min_speed: 0.90, max_speed: 1.20}
+          - {step: 162000, min_speed: 0.95, max_speed: 1.35}
+          - {step: 174000, min_speed: 1.05, max_speed: 1.50}
+          - {step: 186000, min_speed: 1.15, max_speed: 1.65}
+          - {step: 210000, min_speed: 1.25, max_speed: 1.80}
+          - {step: 228000, min_speed: 1.40, max_speed: 1.95}
+          - {step: 246000, min_speed: 1.55, max_speed: 2.10}
+          - {step: 264000, min_speed: 1.65, max_speed: 2.20}
+    # Smoothness is introduced only after a fast gait starts to emerge.
+    action_rate_weight:
+      func: unilab.envs.mdp.reward_curriculum
+      params:
+        reward_name: action_rate
+        stages:
+          - {step: 0, weight: -0.02}
+          - {step: 60000, weight: -0.05}
+          - {step: 96000, weight: -0.10}
+          - {step: 132000, weight: -0.10}
+
+reward:
+  forward_progress:
+    func: microduck_rl_unilab.tasks.microduck.sprint_terms.running_forward_progress
+    weight: 5.0
+    params:
+      speed_cap: 2.4
+      asset_cfg:
+        _target_: unilab.managers.SceneEntityCfg
+        name: robot
+  tracking_lin_vel:
+    weight: 2.0
+    params: {std: 0.3872983346207417, command_name: twist}
+  tracking_ang_vel:
+    weight: 0.5
+    params: {std: 0.7071067811865476, command_name: twist}
+  planar_drift:
+    func: microduck_rl_unilab.tasks.microduck.sprint_terms.running_planar_drift_cost
+    weight: -0.05
+    params:
+      command_name: twist
+      lateral_weight: 4.0
+      asset_cfg:
+        _target_: unilab.managers.SceneEntityCfg
+        name: robot
+  heading_hold:
+    func: microduck_rl_unilab.tasks.microduck.sprint_terms.heading_hold
+    weight: 1.5
+    params:
+      std: 0.4
+      asset_cfg:
+        _target_: unilab.managers.SceneEntityCfg
+        name: robot
+  leg_pose:
+    weight: 0.15
+  upright:
+    weight: 0.75
+    params:
+      std: 0.3872983346207417
+  body_ang_vel:
+    weight: -0.01
+  angular_momentum:
+    weight: -0.005
+  action_rate:
+    weight: -0.02
+  foot_slip:
+    weight: -0.05
+  air_time:
+    weight: 0.0
+  foot_clearance:
+    params:
+      target_height: 0.015
+  foot_swing_height:
+    params:
+      target_height: 0.015
+  head_pose_tracking:
+    weight: 0.0
+  head_pose_bias:
+    weight: 0.0
+  body_pose_tracking:
+    weight: 0.0

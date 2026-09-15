@@ -1,0 +1,57 @@
+# @package _global_
+# Continuation owner for the published Running robustification stages.
+# Speed discovery is frozen at the final 2.2 m/s band so resume cannot rewind
+# the command curriculum (env.common_step_counter starts at 0 on a new run).
+defaults:
+  - /task/microduck_sprint_flat/base
+  - _self_
+
+env:
+  commands:
+    twist:
+      ranges:
+        lin_vel_x: [1.65, 2.2]
+        lin_vel_y: [-0.02, 0.02]
+        ang_vel_z: [-0.05, 0.05]
+  events:
+    push_robot:
+      func: unilab.envs.mdp.push_by_setting_velocity
+      mode: interval
+      interval_range_s: [3.0, 6.0]
+      is_global_time: false
+      params:
+        velocity_range:
+          x: [-0.03, 0.03]
+          y: [-0.03, 0.03]
+          z: [0.0, 0.0]
+          roll: [0.0, 0.0]
+          pitch: [0.0, 0.0]
+          yaw: [0.0, 0.0]
+    base_com:
+      params:
+        com_range:
+          x: [-0.003, 0.003]
+          y: [-0.003, 0.003]
+          z: [-0.003, 0.003]
+    head_com:
+      params:
+        com_range:
+          x: [-0.003, 0.003]
+          y: [-0.003, 0.003]
+          z: [-0.003, 0.003]
+    reset_base:
+      params:
+        pose_range:
+          x: [-0.5, 0.5]
+          y: [-0.5, 0.5]
+          z: [0.0, 0.01]
+          roll: [-0.017453292519943295, 0.017453292519943295]
+          pitch: [-0.017453292519943295, 0.017453292519943295]
+          yaw: [-3.141592653589793, 3.141592653589793]
+  curriculum:
+    running_speed_range: null
+    action_rate_weight: null
+
+reward:
+  action_rate:
+    weight: -0.10

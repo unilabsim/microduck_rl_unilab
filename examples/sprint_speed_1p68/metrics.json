@@ -1,0 +1,35 @@
+{
+  "label": "sprint_speed_1p68",
+  "task": "MicroduckSprintFlat",
+  "train_owner": "microduck_sprint_flat/mujoco then microduck_sprint_robust_flat/mujoco",
+  "checkpoint": "examples/sprint_speed_1p68/model_11997.pt",
+  "source_run": "2026-09-07_06-49-13_mujoco",
+  "source_iteration": 11997,
+  "battery": {
+    "backend": "mujoco",
+    "seed": 123,
+    "num_envs": 512,
+    "command_forward_m_s": 2.2,
+    "warmup_s": 1.0,
+    "duration_s": 10.0,
+    "fall_tilt_deg": 70.0,
+    "survival_fraction": 0.8984375,
+    "body_forward_speed_m_s": {
+      "mean": 1.6816383051829717,
+      "p10": 1.5695905787467956,
+      "median": 1.6909354808330535,
+      "p90": 1.7842927465915681,
+      "clean_survivor_mean": 1.683710193536463
+    },
+    "mean_absolute_heading_error_deg": 42.436773863599974
+  },
+  "known_limits": {
+    "head_inverted_time_fraction": 0.912,
+    "head_up_tilt_deg": 127.1,
+    "head_yaw_abs_deg": 134.4,
+    "head_roll_abs_deg": 25.1,
+    "hip_split_sign_flip_fraction": 0.47,
+    "foot_gap_peak_to_peak_m": 0.241,
+    "note": "Speed example. The gait already alternates the thighs; the neck folds and the head is inverted for most of the run."
+  }
+}
