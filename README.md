@@ -1,23 +1,30 @@
 # microduck_rl_unilab
 
-Pollen Robotics MicroDuck 机器人 RL 训练仓库，**只依赖 UniLab 的包分发，不依赖 UniLab 源码**。
-任务复刻上游 [pollen-robotics/microduck_rl](https://github.com/pollen-robotics/microduck_rl)
-@ `29e887e`（对齐契约见 `src/microduck_rl_unilab/tasks/microduck/alignment_contract.py`，
-审计脚本 `scripts/audit_microduck_alignment.py`）。
+[English](README.md) | [中文](README.zh.md)
 
-本仓库展示 UniLab 对外部分发的两个对接缝（seam）：
+Pollen Robotics MicroDuck RL training on **UniLab's package distribution only**
+(no UniLab source checkout). Tasks reproduce upstream
+[pollen-robotics/microduck_rl](https://github.com/pollen-robotics/microduck_rl)
+@ `29e887e` (alignment contract:
+`src/microduck_rl_unilab/tasks/microduck/alignment_contract.py`;
+audit script: `scripts/audit_microduck_alignment.py`).
 
-1. **任务注册**：`UNILAB_EXTRA_REGISTRY_PACKAGES` 环境变量让 UniLab 的
-   `ensure_registries()` 导入本仓库的任务包（含 spawn 子进程）。
-2. **配置组合**：Hydra `--config-dir` 把 `src/microduck_rl_unilab/conf/<algo>` 追加进
-   对应算法 UniLab 训练脚本的 config search path，外部 `task=<task>/<sim>` owner YAML
-   直接参与组合；conf 树按算法分目录（`conf/ppo/`、`conf/sac/`），与 UniLab 仓内布局一致。
+This repository shows the two public UniLab integration seams:
 
-训练、回放、runner/learner/collector 全部来自 `unilab` wheel；
-本仓库只携带任务代码（manager terms / recovery terms / BAM action 等）、
-owner 配置和机器人 XML 资产。
+1. **Task registration**: `UNILAB_EXTRA_REGISTRY_PACKAGES` lets UniLab's
+   `ensure_registries()` import this repo's task package (including spawn
+   subprocesses).
+2. **Config composition**: Hydra `--config-dir` appends
+   `src/microduck_rl_unilab/conf/<algo>` to the matching UniLab training
+   script's config search path so external `task=<task>/<sim>` owner YAML
+   participates in composition. The conf tree is split by algorithm
+   (`conf/ppo/`, `conf/sac/`), matching UniLab's in-repo layout.
 
-## 任务 × 算法 × 后端矩阵
+Train, eval, and runner/learner/collector all come from the `unilab` wheel.
+This repo only ships task code (manager terms / recovery terms / BAM action,
+and so on), owner configs, and robot XML assets.
+
+## Task × algorithm × backend matrix
 
 | task | ppo | sac |
 |------|-----|-----|
@@ -31,13 +38,14 @@ owner 配置和机器人 XML 资产。
 | `microduck_ground_pick_flat` | mjwarp | — |
 | `microduck_sitstand_flat` | mjwarp | — |
 
-任务与上游 microduck_rl 保持 1:1：BAM（bam xl330-m6 电压伺服模型，
-`BamVoltageAction` 逐 substep 力矩路径）是上游唯一的驱动器模型，因此本仓库
-所有任务统一走 BAM，不再保留早期移植的简化位置驱动变体。
-BAM 的 substep 状态反馈契约（`SimBackend.set_pre_step_control`）在 mujoco 与
-mjwarp 后端均已可用（后者自 unisim PR #20 起）。
+Tasks stay 1:1 with upstream microduck_rl: BAM (bam xl330-m6 voltage servo,
+`BamVoltageAction` per-substep torque path) is the only upstream actuator
+model, so every task here uses BAM. Early simplified position-actuated
+variants were dropped. BAM's substep state-feedback contract
+(`SimBackend.set_pre_step_control`) is available on both mujoco and mjwarp
+(the latter since unisim PR #20).
 
-## 安装
+## Install
 
 ```bash
 git clone https://github.com/unilabsim/microduck_rl_unilab.git
@@ -45,14 +53,17 @@ cd microduck_rl_unilab
 uv sync
 ```
 
-> **依赖**：`unilab[mujoco,mjwarp]==1.0.0`、`unilab-rl==1.0.0`、`unisim-core==1.0.0`
-> 全部从生产 PyPI 解析。unilab 1.0.0 起包含仓内 microduck 任务移除（PR #1495）、
-> `read_reset_root_pose` 基础 API（PR #1494）与 `unilab-rl==1.0.0` 升级（PR #1496）；
-> unisim-core 1.0.0 起包含 mjwarp `set_pre_step_control`（PR #20，BAM×mjwarp 必需）。
+> **Dependencies**: `unilab[mujoco,mjwarp]==1.0.0`, `unilab-rl==1.0.0`, and
+> `unisim-core==1.0.0` all resolve from production PyPI. unilab 1.0.0 includes
+> in-tree microduck task removal (PR #1495), the `read_reset_root_pose` base
+> API (PR #1494), and the `unilab-rl==1.0.0` bump (PR #1496). unisim-core
+> 1.0.0 includes mjwarp `set_pre_step_control` (PR #20, required for BAM ×
+> mjwarp).
 
-## 训练
+## Train
 
-在仓库根目录执行（`env.scene.model_file` 相对仓库根解析）：
+Run from the repository root (`env.scene.model_file` is resolved relative to
+the repo root):
 
 ```bash
 uv run microduck-train --algo ppo --task microduck_velocity_flat --sim mujoco
@@ -62,48 +73,50 @@ uv run microduck-train --algo ppo --task microduck_standup_flat --sim mujoco
 uv run microduck-train --algo sac --task microduck_velocity_flat --sim mujoco
 ```
 
-短程冒烟（4 个 env、2 次迭代、不回放）：
+Short smoke (4 envs, 2 iterations, no play):
 
 ```bash
 uv run microduck-train --algo ppo --task microduck_velocity_flat --sim mujoco \
   algo.num_envs=4 algo.max_iterations=2 training.no_play=true training.play_env_num=4
 ```
 
-任意 UniLab Hydra override 均可透传（如 `algo.num_envs=512`、
-`training.logger=wandb`）。
+Any UniLab Hydra override is passed through (for example `algo.num_envs=512`,
+`training.logger=wandb`).
 
-## 回放
+## Eval
 
 ```bash
 uv run microduck-eval --algo ppo --task microduck_velocity_flat --sim mujoco --load-run -1
 ```
 
-Sprint 评估口径为 2.20 m/s 前向命令、1 秒预热、10 秒测量：
+Sprint eval protocol: 2.20 m/s forward command, 1 s warmup, 10 s measurement:
 
 ```bash
 uv run --no-sync scripts/eval_sprint_speed.py \
   examples/sprint_speed_1p68/model_11997.pt
 ```
 
-从已训好的速度策略做三段 robustify（钉住 1.65–2.20 m/s 命令带，逐步加 push / CoM / 倾角）：
+Three-stage robustify from a trained speed policy (pin the 1.65–2.20 m/s
+command band, then add push / CoM / tilt):
 
 ```bash
 uv run --no-sync scripts/train_sprint_robust.py \
   --load-run <sprint-run> --checkpoint <last-iter> --stages B
 ```
 
-## 示例 checkpoint
+## Example checkpoints
 
-| 示例 | 速度 | 存活 | 头部倒置 | 说明 |
+| Example | Speed | Survival | Head inverted | Notes |
 |---|---|---|---|---|
-| [`examples/sprint_speed_1p68/`](examples/sprint_speed_1p68/) | 1.682 m/s | 89.8% | ~91% | 速度配方。大腿已左右交替；颈部折叠，头大部分时间倒置。 |
-| [`examples/sprint_head_upright/`](examples/sprint_head_upright/) | 1.315 m/s | 97.9% | 0.6% | 同一套交替步态，头顶朝天、面朝前；10 s 航向仍约 42° 左偏。 |
-| [`examples/sprint_straight_long/`](examples/sprint_straight_long/) | ~0.83 m/s 长时 | 300 s 100% | 0 | 续训后闭环节航向 + 横向误差。300 s 平均航向 1.7°，直姿窗口 295 s。 |
+| [`examples/sprint_speed_1p68/`](examples/sprint_speed_1p68/) | 1.682 m/s | 89.8% | ~91% | Speed recipe. Thighs already alternate; neck is folded and the head is inverted most of the time. |
+| [`examples/sprint_head_upright/`](examples/sprint_head_upright/) | 1.315 m/s | 97.9% | 0.6% | Same alternating gait with the crown up and face forward; 10 s heading still ~42° left. |
+| [`examples/sprint_straight_long/`](examples/sprint_straight_long/) | ~0.83 m/s long-horizon | 300 s 100% | 0 | Continued training with closed-loop heading + lateral error. 300 s mean heading 1.7°, straight window 295 s. |
 
-每个目录含 `model_*.pt`、可视化、`metrics.json` 和复现命令。
-`model.pt` 约 4.7 MB，直接入 git。
+Each directory has `model_*.pt`, visualizations, `metrics.json`, and
+reproduce commands. `model.pt` is about 4.7 MB and is stored in git.
 
-长时直线评测（需要闭环 owner，不要用默认 `microduck_sprint_flat`）：
+Long-horizon straight eval (needs the closed-loop owner, not default
+`microduck_sprint_flat`):
 
 ```bash
 uv run --no-sync scripts/eval_sprint_speed.py \
@@ -112,48 +125,51 @@ uv run --no-sync scripts/eval_sprint_speed.py \
   --duration 300 --num-envs 128
 ```
 
-## 测试
+## Tests
 
 ```bash
 uv run pytest tests/ -x -q
 ```
 
-`tests/conftest.py` 复现两个 seam：设置 `UNILAB_EXTRA_REGISTRY_PACKAGES` 并通过
-Hydra `SearchPathPlugin` 把本仓库 `conf/<algo>` 追加进 config search path
-（测试不经 CLI，无法用 `--config-dir`）。
+`tests/conftest.py` recreates both seams: it sets
+`UNILAB_EXTRA_REGISTRY_PACKAGES` and uses a Hydra `SearchPathPlugin` to append
+this repo's `conf/<algo>` to the config search path (tests do not go through
+the CLI, so they cannot use `--config-dir`).
 
-## 资产策略
+## Asset policy
 
-全部 MicroDuck 资产（7 个 XML + 47 个 STL + 上游 LICENSE + sha256 清单）随仓库
-入 git，开箱即用；`assets.py` 仅作为兜底——文件缺失时才从 Hugging Face 数据集
+All MicroDuck assets (7 XML + 47 STL + upstream LICENSE + sha256 manifest)
+are in git and work out of the box. `assets.py` is a fallback only: missing
+files are filled from the Hugging Face dataset
 [`unilabsim/unilab-robots`](https://huggingface.co/datasets/unilabsim/unilab-robots)
-补齐（冷路径）。STL 来源为上游 pollen-robotics/microduck_rl（Apache-2.0，
-见 `assets/robots/microduck/LICENSE.pollen-robotics.txt`），完整性由
-`assets/robots/microduck/assets.sha256` 与 `tests/test_asset_contract.py` 保证。
+(cold path). STLs come from upstream pollen-robotics/microduck_rl
+(Apache-2.0, see `assets/robots/microduck/LICENSE.pollen-robotics.txt`).
+Integrity is checked by `assets/robots/microduck/assets.sha256` and
+`tests/test_asset_contract.py`.
 
-## 仓库结构
+## Layout
 
 ```text
-assets/robots/microduck/            # 机器人 XML + STL + LICENSE + sha256 清单（全部入 git）
+assets/robots/microduck/            # robot XML + STL + LICENSE + sha256 manifest (all in git)
 src/microduck_rl_unilab/
-├── assets.py                       # 冷路径资产物化（snapshot_download 兜底）
-├── cli.py                          # microduck-train / microduck-eval：env var + --config-dir 注入
-├── conf_searchpath.py              # Hydra SearchPathPlugin（测试/脚本的程序化 compose 用）
+├── assets.py                       # cold-path asset materialization (snapshot_download fallback)
+├── cli.py                          # microduck-train / microduck-eval: env var + --config-dir injection
+├── conf_searchpath.py              # Hydra SearchPathPlugin (programmatic compose for tests/scripts)
 ├── conf/
 │   ├── ppo/task/microduck_{velocity_flat,sprint_flat,sprint_robust_flat,velstand_flat,standup_flat,ground_pick_flat,sitstand_flat}/
 │   └── sac/task/microduck_velocity_flat/
 └── tasks/
     ├── __init__.py                 # __unilab_registry_modules__
     └── microduck/
-        ├── __init__.py             # 任务 registry.register_env
-        ├── manager_terms.py        # velocity command / 奖励 terms
-        ├── sprint_terms.py         # sprint 速度/航向奖励与速度课程
-        ├── recovery_terms.py       # velstand 跌倒恢复 terms
+        ├── __init__.py             # task registry.register_env
+        ├── manager_terms.py        # velocity command / reward terms
+        ├── sprint_terms.py         # sprint speed/heading rewards and speed curriculum
+        ├── recovery_terms.py       # velstand fall-recovery terms
         ├── standup_terms.py        # standup / ground_pick / sitstand terms
-        ├── bam_action.py           # BAM 电压驱动 action term
-        ├── deploy_contract.py      # obs/action 维度契约
-        ├── alignment_contract.py   # 上游 microduck_rl @ 29e887e 对齐契约表
-        └── sim2real_notes.py       # sim2real 注意事项
-tests/                              # 迁移自 UniLab 的契约/对齐测试套件
-scripts/                            # 对齐审计 / 对比 / rollout 脚本
+        ├── bam_action.py           # BAM voltage-servo action term
+        ├── deploy_contract.py      # obs/action dimension contract
+        ├── alignment_contract.py   # upstream microduck_rl @ 29e887e alignment table
+        └── sim2real_notes.py       # sim2real notes
+tests/                              # contract/alignment suite migrated from UniLab
+scripts/                            # alignment audit / compare / rollout scripts
 ```

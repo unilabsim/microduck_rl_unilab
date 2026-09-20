@@ -114,7 +114,7 @@ def test_build_report_pairs_aliased_terms(tmp_path: Path) -> None:
     assert "tracking_lin_vel / track_linear_velocity" in report
     assert "action_rate / action_rate_l2" in report
     assert "tilt / fell_over" in report
-    assert "上游独有 term: `head_pose_bias`" in report
-    assert "只有 1 个 run" in report
+    assert "Upstream-only term: `head_pose_bias`" in report
+    assert "has only 1 run" in report
     # aliased termination values: unilab tilt=1 vs upstream fell_over=3 -> -66.7%
     assert "-66.7%" in report

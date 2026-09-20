@@ -223,17 +223,20 @@ def _render_run_table(side: str, runs: list[RunData]) -> list[str]:
         )
     if len(runs) < 2:
         lines.append("")
-        lines.append(f"> ⚠ {side} 侧只有 {len(runs)} 个 run，std 不可用，统计仅供参考。")
+        lines.append(
+            f"> ⚠ {side} has only {len(runs)} run(s); std is unavailable, stats are indicative only."
+        )
     return lines
 
 
 def build_report(unilab_runs: list[RunData], upstream_runs: list[RunData]) -> str:
     unilab_summary = summarize_side(unilab_runs)
     upstream_summary = summarize_side(upstream_runs)
-    lines = ["# MicroDuck PPO 对比报告", ""]
+    lines = ["# MicroDuck PPO comparison report", ""]
     lines.append(
-        f"终段窗口 = 每 run 末尾 {FINAL_WINDOW_FRAC:.0%} iterations；"
-        f"收敛速度 = mean_reward 首次达到自身终段均值 {CONVERGENCE_FRAC:.0%} 的 iteration。"
+        f"Final window = last {FINAL_WINDOW_FRAC:.0%} of iterations per run; "
+        f"convergence = first iteration where mean_reward reaches "
+        f"{CONVERGENCE_FRAC:.0%} of that run's own final-window mean."
     )
     lines.append("")
     lines.append("## Runs")
@@ -245,14 +248,14 @@ def build_report(unilab_runs: list[RunData], upstream_runs: list[RunData]) -> st
     lines.extend(_render_run_table("upstream", upstream_runs))
     lines.append("")
 
-    lines.append("## 总览指标")
+    lines.append("## Overview")
     lines.append("")
-    lines.append("| 指标 | UniLab | 上游 | 相对差 |")
+    lines.append("| Metric | UniLab | Upstream | Rel. diff |")
     lines.append("| --- | --- | --- | --- |")
     overview_rows = [
-        ("Train/mean_reward", "mean_reward 终段均值"),
-        ("Train/mean_episode_length", "episode length 终段均值"),
-        ("Train/mean_reward@convergence_iter", "收敛 iteration (80% final reward)"),
+        ("Train/mean_reward", "mean_reward final-window mean"),
+        ("Train/mean_episode_length", "episode length final-window mean"),
+        ("Train/mean_reward@convergence_iter", "convergence iteration (80% final reward)"),
     ]
     for tag, label in overview_rows:
         u = unilab_summary.get(tag, {"mean": None, "std": None})
@@ -269,7 +272,7 @@ def build_report(unilab_runs: list[RunData], upstream_runs: list[RunData]) -> st
             prefix,
             aliases,
         )
-        lines.append("| term (UniLab / 上游) | UniLab 终段 | 上游终段 | 相对差 |")
+        lines.append("| term (UniLab / upstream) | UniLab final | Upstream final | Rel. diff |")
         lines.append("| --- | --- | --- | --- |")
         for term in paired:
             u = unilab_summary[prefix + term]
@@ -280,18 +283,18 @@ def build_report(unilab_runs: list[RunData], upstream_runs: list[RunData]) -> st
             )
         if unilab_only:
             lines.append("")
-            lines.append(f"UniLab 独有 term: {', '.join(f'`{t}`' for t in unilab_only)}")
+            lines.append(f"UniLab-only term: {', '.join(f'`{t}`' for t in unilab_only)}")
         if upstream_only:
-            lines.append(f"上游独有 term: {', '.join(f'`{t}`' for t in upstream_only)}")
+            lines.append(f"Upstream-only term: {', '.join(f'`{t}`' for t in upstream_only)}")
         lines.append("")
 
-    _term_section("Reward term 终段对比", REWARD_PREFIX, REWARD_TERM_ALIASES)
-    _term_section("Termination 构成对比", TERMINATION_PREFIX, TERMINATION_ALIASES)
+    _term_section("Reward term final-window comparison", REWARD_PREFIX, REWARD_TERM_ALIASES)
+    _term_section("Termination composition comparison", TERMINATION_PREFIX, TERMINATION_ALIASES)
 
     # Termination composition shares (UniLab side naming for paired terms).
-    lines.append("## Termination 终段占比")
+    lines.append("## Termination final-window shares")
     lines.append("")
-    lines.append("| term | UniLab 占比 | 上游占比 |")
+    lines.append("| term | UniLab share | Upstream share |")
     lines.append("| --- | --- | --- |")
 
     def _shares(summary: dict[str, dict[str, float | None]]) -> dict[str, float]:
@@ -316,7 +319,7 @@ def build_report(unilab_runs: list[RunData], upstream_runs: list[RunData]) -> st
             f"| {term} | {u_shares.get(term, 0.0):.1%} | {up_shares.get(up_name, 0.0):.1%} |"
         )
     for term in up_only:
-        lines.append(f"| {term} (上游独有) | — | {up_shares.get(term, 0.0):.1%} |")
+        lines.append(f"| {term} (upstream-only) | — | {up_shares.get(term, 0.0):.1%} |")
     lines.append("")
     return "\n".join(lines)
 

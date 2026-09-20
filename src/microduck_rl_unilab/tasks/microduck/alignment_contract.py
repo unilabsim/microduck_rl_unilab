@@ -122,7 +122,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("env.sim_dt"),
         0.005,
         "match",
-        "上游 ctrl 50 Hz 下 sim_dt=0.005（substeps=4）；substeps 由 ctrl_dt/sim_dt 推导。",
+        "Upstream 50 Hz control with sim_dt=0.005 (substeps=4); substeps are derived from ctrl_dt/sim_dt.",
     ),
     AlignmentEntry("physics.ctrl_dt", "physics", _hydra("env.ctrl_dt"), 0.02, "match"),
     AlignmentEntry(
@@ -138,7 +138,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _xml_option("integrator"),
         "implicitfast",
         "match",
-        "scene_flat_bam.xml <option>；mujoco_warp 3.10 实现了 IMPLICITFAST（forward.py fwd_position）。",
+        "scene_flat_bam.xml <option>; mujoco_warp 3.10 implements IMPLICITFAST (forward.py fwd_position).",
     ),
     AlignmentEntry(
         "physics.solver.solver",
@@ -146,7 +146,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _xml_option("solver"),
         "Newton",
         "match",
-        "scene_flat_bam.xml <option>（MJCF 区分大小写，Newton 为正典拼写）；上游 mjlab SimCfg 默认 newton。",
+        "scene_flat_bam.xml <option> (MJCF is case-sensitive; Newton is the canonical spelling); upstream mjlab SimCfg defaults to newton.",
     ),
     AlignmentEntry(
         "physics.solver.cone",
@@ -154,7 +154,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _xml_option("cone"),
         "pyramidal",
         "match",
-        "scene_flat_bam.xml <option>。",
+        "scene_flat_bam.xml <option>.",
     ),
     AlignmentEntry(
         "physics.solver.iterations",
@@ -162,7 +162,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _xml_option("iterations"),
         10,
         "match",
-        "scene_flat_bam.xml <option>；上游 velocity flat 配方为 10。",
+        "scene_flat_bam.xml <option>; upstream velocity-flat recipe uses 10.",
     ),
     AlignmentEntry(
         "physics.solver.ls_iterations",
@@ -170,7 +170,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _xml_option("ls_iterations"),
         20,
         "match",
-        "scene_flat_bam.xml <option>；上游为 20。",
+        "scene_flat_bam.xml <option>; upstream uses 20.",
     ),
     AlignmentEntry(
         "physics.solver.tolerance",
@@ -178,7 +178,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _xml_option("tolerance"),
         1e-8,
         "match",
-        "scene_flat_bam.xml <option>。",
+        "scene_flat_bam.xml <option>.",
     ),
     AlignmentEntry(
         "physics.solver.ls_tolerance",
@@ -186,7 +186,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _xml_option("ls_tolerance"),
         0.01,
         "match",
-        "scene_flat_bam.xml <option>。",
+        "scene_flat_bam.xml <option>.",
     ),
     # ------------------------------------------------------------------
     # mdp: actions / observations
@@ -204,8 +204,8 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("env.actions.joint_pos.kp_fw"),
         200.0,
         "match",
-        "BAM 是上游唯一驱动器模型：BamVoltageAction 固件 P 增益 200（Dynamixel KP "
-        "寄存器域）；q_des = action * scale + default_joint_pos，仍围绕 HOME 偏移。",
+        "BAM is the only upstream actuator model: BamVoltageAction firmware P-gain 200 "
+        "(Dynamixel KP register domain); q_des = action * scale + default_joint_pos, still offset around HOME.",
     ),
     AlignmentEntry(
         "mdp.obs_dim.policy",
@@ -220,7 +220,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _module("microduck_rl_unilab.tasks.microduck.deploy_contract.MICRODUCK_CRITIC_OBS_DIM"),
         76,
         "match",
-        "actor 61 + base_lin_vel 3 + privileged foot terms 12。",
+        "actor 61 + base_lin_vel 3 + privileged foot terms 12.",
     ),
     # ------------------------------------------------------------------
     # mdp: commands
@@ -266,7 +266,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("env.commands.twist.rel_standing_envs"),
         0.02,
         "match",
-        "stage-0 值；standing_envs curriculum 爬升至 0.25（见 curriculum 条目）。",
+        "Stage-0 value; standing_envs curriculum ramps to 0.25 (see curriculum entries).",
     ),
     AlignmentEntry(
         "mdp.commands.twist.turn_in_place_fraction",
@@ -274,7 +274,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("env.commands.twist.turn_in_place_fraction"),
         0.15,
         "match",
-        "turn-in-place 桶 |wz| ∈ [0.4, 1.0]。",
+        "Turn-in-place bin |wz| ∈ [0.4, 1.0].",
     ),
     AlignmentEntry(
         "mdp.commands.twist.turn_in_place_ang_min",
@@ -298,7 +298,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         "match",
     ),
     # ------------------------------------------------------------------
-    # mdp: curriculum stage steps（= 上游 iteration × 24 env steps）
+    # mdp: curriculum stage steps (= upstream iteration × 24 env steps)
     # ------------------------------------------------------------------
     AlignmentEntry(
         "mdp.curriculum.action_rate_weight",
@@ -349,9 +349,9 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("env.events.reset_base"),
         PRESENT,
         "match",
-        "reset_root_state_uniform：base xy ±0.5 m、yaw ±π、z 增量 [0, 0.01] 叠加在 "
-        "keyframe z=0.12 上（绝对 z ∈ [0.12, 0.13]），速度全零；关节由 "
-        "reset_scene_to_default 精确回 HOME（上游 reset_robot_joints 零偏移等价）。",
+        "reset_root_state_uniform: base xy ±0.5 m, yaw ±π, z delta [0, 0.01] stacked on "
+        "keyframe z=0.12 (absolute z ∈ [0.12, 0.13]), velocities all zero; joints snap to "
+        "HOME via reset_scene_to_default (equivalent to upstream reset_robot_joints with zero offset).",
     ),
     AlignmentEntry(
         "mdp.events.startup_mass_inertia",
@@ -359,9 +359,10 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("env.events.randomize_mass_inertia"),
         PRESENT,
         "match",
-        "randomize_body_mass_inertia：trunk_base 质量+惯量同乘 s=e^{2α}，"
-        "α~U(ln0.95/2, ln1.05/2)，CoM/主轴不变。UniLab 以 reset 模式实现上游 "
-        "startup 语义：首次 reset 采样一次并缓存，全 run 固定，后续 reset 幂等重放。",
+        "randomize_body_mass_inertia: trunk_base mass and inertia share a scale s=e^{2α}, "
+        "α~U(ln0.95/2, ln1.05/2); CoM/principal axes unchanged. UniLab implements upstream "
+        "startup semantics in reset mode: sample once on the first reset, cache for the whole "
+        "run, and replay idempotently on later resets.",
     ),
     AlignmentEntry(
         "mdp.events.push_robot.is_global_time",
@@ -369,7 +370,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("env.events.push_robot.is_global_time"),
         False,
         "match",
-        "上游 per-env 独立 interval。",
+        "Upstream uses a per-env independent interval.",
     ),
     AlignmentEntry(
         "mdp.events.push_robot.interval_range_s",
@@ -384,7 +385,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("env.events.push_robot.params.velocity_range.x"),
         [-0.3, 0.3],
         "match",
-        "y 方向同为 ±0.3。",
+        "The y range is the same ±0.3.",
     ),
     AlignmentEntry(
         "mdp.terminations.set",
@@ -392,7 +393,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra_keys("env.terminations"),
         ["nan_state", "tilt", "time_out"],
         "match",
-        "上游集合 = time_out + tilt 70° + nan_detection（无 base_height）。",
+        "Upstream set = time_out + tilt 70° + nan_detection (no base_height).",
     ),
     AlignmentEntry(
         "mdp.terminations.tilt_limit",
@@ -400,10 +401,10 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("env.terminations.tilt.params.limit_angle"),
         1.2217304763960306,
         "match",
-        "70°。",
+        "70°.",
     ),
     # ------------------------------------------------------------------
-    # mdp: reward stack（velocity_flat；上游 HEAD 配方）
+    # mdp: reward stack (velocity_flat; upstream HEAD recipe)
     # ------------------------------------------------------------------
     AlignmentEntry(
         "mdp.reward.track_linear_velocity.weight",
@@ -419,8 +420,8 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("reward.tracking_lin_vel.params.std"),
         math.sqrt(0.1),
         "match",
-        "unilab.envs.mdp.track_linear_velocity：exp(-(‖cmd_xy−v_xy‖²+v_z²)/std²)，"
-        "body frame，vz² 并入指数（上游不再单列 lin_vel_z term）。",
+        "unilab.envs.mdp.track_linear_velocity: exp(-(‖cmd_xy−v_xy‖²+v_z²)/std²), "
+        "body frame, vz² folded into the exponent (upstream no longer has a standalone lin_vel_z term).",
         tasks=VELOCITY_TASK,
     ),
     AlignmentEntry(
@@ -445,7 +446,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("reward.upright.weight"),
         2.0,
         "match",
-        "unilab.envs.mdp.upright：exp(-‖pg_xy‖²/std²)，std=√0.05，body=trunk_base。",
+        "unilab.envs.mdp.upright: exp(-‖pg_xy‖²/std²), std=√0.05, body=trunk_base.",
         tasks=VELOCITY_TASK,
     ),
     AlignmentEntry(
@@ -454,9 +455,9 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("reward.leg_pose.params.std_walking"),
         PRESENT,
         "match",
-        "上游 pose（variable_posture）：仅腿关节，站立/行走两套 std，行走时按 "
-        "std_walking 继续评分（std_running 与 std_walking 相同）；UniLab 以 "
-        "unilab.envs.mdp.variable_posture 实现，walking_threshold=0.01。",
+        "Upstream pose (variable_posture): legs only, standing/walking stds; walking continues "
+        "to score with std_walking (std_running equals std_walking). UniLab uses "
+        "unilab.envs.mdp.variable_posture with walking_threshold=0.01.",
         tasks=VELOCITY_TASK,
     ),
     AlignmentEntry(
@@ -465,7 +466,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("reward.leg_pose.weight"),
         1.0,
         "match",
-        "权重一致；形态差异见 variable_posture 条目。",
+        "Weights match; shape differences are documented on the variable_posture entry.",
         tasks=VELOCITY_TASK,
     ),
     AlignmentEntry(
@@ -474,9 +475,9 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("reward.body_ang_vel.weight"),
         -0.05,
         "match",
-        "上游 body_angular_velocity_penalty 只罚 trunk_base 的 world-frame ω_xy"
-        "（yaw 自由，mjlab 注释明确不罚 z 轴）；UniLab 同名 term 同源实现，"
-        "取代旧的 gyro 传感器 ang_vel_xy(-0.05)。",
+        "Upstream body_angular_velocity_penalty only penalizes trunk_base world-frame ω_xy "
+        "(yaw is free; mjlab comments explicitly skip the z axis). UniLab uses the same-named "
+        "term from the same implementation, replacing the old gyro-sensor ang_vel_xy(-0.05).",
         tasks=VELOCITY_TASK,
     ),
     AlignmentEntry(
@@ -501,7 +502,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("reward.action_rate.weight"),
         -0.1,
         "match",
-        "curriculum -0.1 → -1.0（见 curriculum 条目）。",
+        "Curriculum -0.1 → -1.0 (see curriculum entries).",
         tasks=VELOCITY_TASK,
     ),
     AlignmentEntry(
@@ -566,9 +567,9 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("reward.self_collisions.weight"),
         -1.0,
         "match",
-        "上游 self_collision_cost 在 found-only 传感器下是碰撞 geom 对计数"
-        "（force_threshold=10 N 仅在 force history 启用时生效，上游未启用）；"
-        "UniLab 由 locomotion_task.xml 三个 self_collision_* found 传感器驱动。",
+        "Upstream self_collision_cost under found-only sensors counts colliding geom pairs "
+        "(force_threshold=10 N only applies when force history is enabled, which upstream does not). "
+        "UniLab is driven by the three self_collision_* found sensors in locomotion_task.xml.",
         tasks=VELOCITY_TASK,
     ),
     AlignmentEntry(
@@ -593,8 +594,8 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("reward.body_pose_tracking.weight"),
         0.0,
         "match",
-        "挂起态（weight 0.0，保持 command/obs 通道活性）；6D 高斯均值："
-        "nominal_height 0.095、xy_std 0.05、z_std 0.02、angle_std 15°。",
+        "Parked (weight 0.0, keeping command/obs channels live); 6D Gaussian means: "
+        "nominal_height 0.095, xy_std 0.05, z_std 0.02, angle_std 15°.",
         tasks=VELOCITY_TASK,
     ),
     AlignmentEntry(
@@ -603,7 +604,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("reward.head_pose_bias.weight"),
         0.0,
         "match",
-        "curriculum 0 → 3.0（见 curriculum 条目）。",
+        "Curriculum 0 → 3.0 (see curriculum entries).",
         tasks=VELOCITY_TASK,
     ),
     AlignmentEntry(
@@ -612,7 +613,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("reward.orientation.weight"),
         ABSENT,
         "match",
-        "上游无此 term（旧栈 -3.0 已移除；直立性由 upright 承载）。",
+        "Upstream has no such term (old stack -3.0 removed; uprightness is carried by upright).",
         tasks=VELOCITY_TASK,
     ),
     AlignmentEntry(
@@ -621,7 +622,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("reward.base_height.weight"),
         ABSENT,
         "match",
-        "上游无此 term（旧栈 -50.0 已移除）。",
+        "Upstream has no such term (old stack -50.0 removed).",
         tasks=VELOCITY_TASK,
     ),
     AlignmentEntry(
@@ -630,7 +631,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("reward.alive.weight"),
         ABSENT,
         "match",
-        "上游无此 term（旧栈 +0.1 已移除）。",
+        "Upstream has no such term (old stack +0.1 removed).",
         tasks=VELOCITY_TASK,
     ),
     AlignmentEntry(
@@ -639,7 +640,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("reward.flight_phase.weight"),
         ABSENT,
         "match",
-        "上游无此 term（旧栈 -2.0 已移除）。",
+        "Upstream has no such term (old stack -2.0 removed).",
         tasks=VELOCITY_TASK,
     ),
     AlignmentEntry(
@@ -648,11 +649,11 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("reward.lin_vel_z.weight"),
         ABSENT,
         "match",
-        "上游无独立 lin_vel_z term（vz² 已并入 track_linear_velocity 指数）。",
+        "Upstream has no standalone lin_vel_z term (vz² is already in the track_linear_velocity exponent).",
         tasks=VELOCITY_TASK,
     ),
     # ------------------------------------------------------------------
-    # infra: PPO 超参数（compose 后）
+    # infra: PPO hyperparameters (after compose)
     # ------------------------------------------------------------------
     AlignmentEntry(
         "infra.algo.actor_hidden_dims",
@@ -765,7 +766,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("algo.num_envs"),
         4096,
         "match",
-        "issue #1456：三任务 mjwarp owner 统一 4096。",
+        "issue #1456: mjwarp owners for all three tasks unified at 4096.",
     ),
     AlignmentEntry(
         "infra.seed",
@@ -773,7 +774,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("algo.seed"),
         42,
         "match",
-        "issue #1456：三任务 mjwarp owner 统一 42；env 级采样 RNG 由 env.seed=42 固定。",
+        "issue #1456: mjwarp owners for all three tasks unified at 42; env-level sampling RNG is pinned by env.seed=42.",
     ),
     AlignmentEntry(
         "infra.env_seed",
@@ -781,8 +782,8 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("env.seed"),
         42,
         "match",
-        "issue #1456：env 级 RNG（command / obs noise / delay / DR 采样）经 Hydra "
-        "env.seed 固定为 42，run 间可复现；默认 None 行为不变（opt-in）。",
+        "issue #1456: env-level RNG (command / obs noise / delay / DR sampling) is pinned "
+        "to 42 via Hydra env.seed so runs are reproducible; default None behavior is unchanged (opt-in).",
     ),
     AlignmentEntry(
         "infra.max_iterations",
@@ -790,8 +791,8 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _hydra("algo.max_iterations"),
         None,
         "note",
-        "当前 2000（2000×24=48000 env step，恰好覆盖全部 curriculum 终档），上游 50000；"
-        "训练预算由 child 5 决策，不参与 match/gap 判定。",
+        "Currently 2000 (2000×24=48000 env steps, covering every curriculum terminal stage); "
+        "upstream 50000. Training budget is a child-5 decision and is not judged as match/gap.",
     ),
     AlignmentEntry(
         "infra.mujoco_warp_version",
@@ -799,7 +800,7 @@ ENTRIES: tuple[AlignmentEntry, ...] = (
         _module("mujoco_warp.__version__"),
         "3.8.1",
         "note",
-        "UniLab pin 3.10.0.3 vs 上游 3.8.1；环境项，本 roadmap 不修复。",
+        "UniLab pins 3.10.0.3 vs upstream 3.8.1; environment item, out of scope for this roadmap.",
     ),
 )
 
